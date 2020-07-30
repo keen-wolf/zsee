@@ -1,0 +1,14 @@
+wget https://codeload.github.com/dagwieers/dstat/zip/master
+unzip master
+ÐÞ¸Äbug²¿·Ö£º
+
+diff dstat_disk_avgrq.py /usr/share/dstat/dstat_disk_avgrq.py
+61,62c61,62
+<                 rd_sect = long(l[9]),
+<                 wr_sect = long(l[11]),
+---
+>                 rd_sect = long(l[5]),
+>                 wr_sect = long(l[9]),
+
+------------------------------------------
+

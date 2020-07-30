@@ -1,0 +1,36 @@
+#head -10 $1 | grep "Cmdline" | awk '{match($0,"-D ([^ ]*)",d);match($0,"-N ([^ ]*)",n);print d[1],n[1]}'
+
+sed -e 's/;/,/g' $1
+
+cat $1 | awk -F';' 'BEGIN{cnt=0}{
+
+	if(NR==4){
+		match($0,"-D ([^ ]*)",d);
+		dsks=d[1];
+		match($0,"-N ([^ ]*)",n);
+		nets=n[1];
+
+	}
+
+	if(NR<=10)next;
+	
+	if(!cnt)cnt = length($NF)>0 ? NF : NF-1; # skip the last noop(sometimes its not noop... theres a bug)
+	for(i=2;i<=cnt;i++){ #skip the 1st time
+		avg[i-1]+=$i; # start from 1
+	}
+	
+	}END{
+	for(k in avg)avg[k] /= (NR-10);
+	printf "AVG ALL,"
+	for(i=2;i<=cnt;i++){
+		printf avg[i-1]","
+	}
+	print "";
+}'
+
+
+
+
+
+
+

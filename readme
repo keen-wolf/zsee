@@ -1,0 +1,65 @@
+##by zhangjingliang##
+################################【安装】##################################
+
+1.
+删除之前dstat版本——如果存在
+rpm -qa dstat
+rpm -e dstat-0.7.0-1.el6.noarch
+
+2.
+将本目录下载内容下载到 zstat 目录
+cd zstat
+tar -zxvf dstat-master.gz; cd dstat-master/ ; make install
+cd ..; cp bin/* /usr/bin
+
+################################【使用方法】##################################
+
+大概流程：
+1. zsee —— 实时监控当前系统状态（磁盘、网络、内存、CPU）
+2. zlog —— 抓取log
+3. zsum —— 解析原始log并输出统计信息
+
+################################【示例】##################################
+
+1. zsee [lo,eth0] [sda,sdb,sdc] [less] [int]
+	. 最多有如上四个参数，每个参数都可选（可全无），参数间不限定顺序。less表示不显示CPU分core信息，int表示监测间隔（秒）
+	. 网络与硬盘参数部分，多个实体间用,分割
+		
+		**示例**
+		zsee
+		zsee 3
+		zsee sda eth1
+		zsee less eth2,lo sda,sdb 4
+		
+2. zlog [lo,eth0] [sda,sdb,sdc] [120(seconds last)] [-s(ilent)] -o logfile (must be the last parameter)
+	. 最后参数必须为 -o file ，前面参数不限定顺序
+	. -s 表示log时不输出实时状态（默认输出）
+	. seconds last 表示要log的时长（默认120s），log内监测间隔为2s
+	. 可在log过程中ctrl+c中断
+	. log结束后会显示统计信息
+	
+	**示例**
+	zlog -o log
+	zlog -s -o log
+	zlog 90 -o log
+	zlog eth1 sda,sdb -s -o log
+	
+3. zsum logfile
+	
+	**示例**
+	zsum log
+	
+4. zshow 将原始log文件输出为易读格式，并在末尾加入统计信息
+
+	**示例**
+	zshow logfile
+	zshow logfile > log-pretty
+	zshow logfile | grep sda
+	
+
+5. zcvs 将原始log文件转换为excel可读的cvs格式，并在末尾加入统计信息
+	
+	**示例**
+	zcvs logfile > log.csv
+	
+	
