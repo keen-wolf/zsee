@@ -68,11 +68,10 @@
 	split(dsks,h,",");split(g[8],t,":");
 	lcpu=length(t);
 	ldsk=length(h);
-
-	ldname = 5;
+	ldname = 6
 	for(i=1;i<=length(h);i++){
-		if(length(h[i])>5)
-			h[i]=substr(h[i],1,2)"."substr(h[i],length(h[i])-1);
+		if(length(h[i])>6)
+			h[i]=substr(h[i],1,2)"."substr(h[i],length(h[i])-2);
 		h[i]=sprintf("%"ldname"s",h[i]);
 	}
 
@@ -88,7 +87,7 @@
 	for( i=1; i<=ldsk+1; i++ ){
 		col = int(curr/(wlns+2));
 		if( curr % (wlns+2) == 0){#arry subindex all starts from zero
-			showbuf[curr++ % (wlns+2), col]="#DSK:      r     w    r/s    w/s  rqsz  util \t|"
+			showbuf[curr++ % (wlns+2), col]="#DSK:      r     w   r/s   w/s  rqsz  util   \t|"
 			showbuf[curr++ % (wlns+2), col]="---------------------------------------------\t|"
 		}
 
@@ -169,13 +168,13 @@
 
 		if (i == lcpu+1){
 			#CPU avg
-			cpuavg = "AVG: "
+			cpuavg = "AVG:   "
 			for(tt=1;tt<=length(c);tt++){cpuavg=cpuavg""sprintf("%3d ",cc[tt]/length(t));cc[tt]=0;}
 			showbuf[curr++ % (wlns+2), col] = cpuavg" \t\t|";
 			continue;
 		}
 
-		showbuf[curr++ % (wlns+2), col] = sprintf("%02d:  %s", i-1,t[i])"\t\t|";
+		showbuf[curr++ % (wlns+2), col] = sprintf("%03d:   %s", i-1,t[i])"\t\t|";
 		split(t[i],c);
 		for(tt=1;tt<=length(c);tt++)cc[tt]+=c[tt];
 	}
