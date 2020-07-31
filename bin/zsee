@@ -1,8 +1,10 @@
 #!/bin/bash
 
-###Set the window size to tune the display if needed. or this program will do it in an adaptive mode.
+DIR=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
 
-stty_lns_set=0 #which can get by "$ tput lines" or "echo $LINES" in shell when pre set to 0.
+# Set the window size to tune the display if needed. or this program will do it in an adaptive mode.
+
+stty_lns_set=0 # which can get by "$ tput lines" or "echo $LINES" in shell when pre set to 0.
 
 ###############################################################
 
@@ -51,10 +53,10 @@ if [ -z $int ];then
 	int=2
 fi
 if [ -z ${stty_lines} ];then
-	stty_lines=0;	
+	stty_lines=0;
 fi
 
-dstat -tmnd --disk-tps --disk-avgrq --disk-util -D $dsks -c -N $nets -C $cpu --nocolor --noheaders $int | 
+"$DIR"/dstat -tmnd --disk-tps --disk-avgrq --disk-util -D $dsks -c -N $nets -C $cpu --nocolor --noheaders $int |
 awk -v dsks=$dsks -v stty_lns_set=$stty_lns_set '{
 
 	#Dynamically get the windows size at each loop
@@ -65,25 +67,25 @@ awk -v dsks=$dsks -v stty_lns_set=$stty_lns_set '{
 		stty_lines=stty_lns_set+0;
 	}
 	wlns=stty_lines-7;
-	
+
 	#check if is wide enough. now each col in showbuff occupy about 41 colums in screen
 	"tput cols"|getline cls; close("tput cols");
 	stty_cols=cls+0;
-	
+
 	#let go wrong once to refresh the "col"
 	if(stty_lines_pre == stty_lines && stty_cols < (col+1)*40){
 		print "The screen is too small , please expand the window longer or wider"
 		next;
 	}
 	stty_lines_pre = stty_lines;
-	 
+
 	#####################################################
-	
+
 	#reset display buffer for dynamic window resize
 	delete showbuf
 
 	print "";
-	
+
 	if(NR==1){
 		nets="";
 		for(i=1;i<=NF;i++){
@@ -97,9 +99,9 @@ awk -v dsks=$dsks -v stty_lns_set=$stty_lns_set '{
 	if(NR<=2)next;
 
 	split($0,g,"|");
-	
+
 	printf "@"g[1]"\t\t";
-	
+
 	if (col > 0){ #if enough space then make MEM same line with DATE
 		print "#MEM:\tused  buff  cach  free";
 		print "\t\t\t\t"g[2];
@@ -116,12 +118,12 @@ awk -v dsks=$dsks -v stty_lns_set=$stty_lns_set '{
 	printf "#NET(I/O):  "
 	for(i=1;i<=length(n);i++){
 		split(net[i],nn," ");
-		printf n[i]"( "nn[1]" / "nn[2]" )   ";				
+		printf n[i]"( "nn[1]" / "nn[2]" )   ";
 	}
 	print "";print "";
-	
+
 	#make dsk_name with same cut length
-	
+
 	split(dsks,h,",");split(g[8],t,":");
 	lcpu=length(t);
 	ldsk=length(h);
@@ -130,7 +132,7 @@ awk -v dsks=$dsks -v stty_lns_set=$stty_lns_set '{
 		if(ldname<length(h[i]))
 			ldname=length(h[i]);
 	for(i=1;i<=length(h);i++){
-		if(length(h[i])>5)
+		if(length(h[i])>6)
 			h[i]=substr(h[i],1,2)"."substr(h[i],length(h[i])-2);
 		h[i]=sprintf("%"ldname"s",h[i]);
 	}
@@ -147,29 +149,29 @@ awk -v dsks=$dsks -v stty_lns_set=$stty_lns_set '{
 	for( i=1; i<=ldsk+1; i++ ){
 		col = int(curr/(wlns+2));
 		if( curr % (wlns+2) == 0){#arry subindex all starts from zero
-			showbuf[curr++ % (wlns+2), col]="#DSK:  r     w    r/s   w/s  rqsz util\t|"
-			showbuf[curr++ % (wlns+2), col]="--------------------------------------\t|"
+			showbuf[curr++ % (wlns+2), col]="#DSK:      r     w    r/s    w/s  rqsz  util \t|"
+			showbuf[curr++ % (wlns+2), col]="---------------------------------------------\t|"
 		}
-		
+
 		if (i == ldsk+1){
 			#dsk summary
 			dsksum = sprintf("%"ldname"s:","ALL")
 			for(tt=1;tt<=2;tt++)dsksum = dsksum""sprintf("%4dM ",bdd[tt]/1024/1024);
-			for(tt=1;tt<=2;tt++)dsksum = dsksum""sprintf("%4d ",ops[tt]/length(h));
-			dsksum = dsksum""sprintf("%5d ",rqsz/length(h));
-			dsksum = dsksum""sprintf("%4d ",util/length(h));
-			
+			for(tt=1;tt<=2;tt++)dsksum = dsksum""sprintf("%4d  ",ops[tt]/length(h));
+			dsksum = dsksum""sprintf("%5d  ",rqsz/length(h));
+			dsksum = dsksum""sprintf("%4d  ",util/length(h));
+
 			showbuf[curr++ % (wlns+2), col]=dsksum"\t|";
-			
+
 			for(tt=1;tt<=2;tt++){bdd[tt]=0;ops[tt]=0;}
 			rqsz = 0;
 			util = 0;
 			continue;
 		}
-		
+
 
 		onedsk = h[i];
-		
+
 		j=1;
 		split(g[3+j],ss,":");
 		onedsk = onedsk" "ss[i];
@@ -188,61 +190,61 @@ awk -v dsks=$dsks -v stty_lns_set=$stty_lns_set '{
 			ops[tt]+=bd[tt];
 		}
 		#print ops[1],ops[2];
-		
+
 		j=3;
 		split(g[3+j],ss,":");
-		onedsk = onedsk" "ss[i];
+		onedsk = onedsk"  "ss[i];
 		rqsz+=ss[i];
 		#print rqsz;
-		
-		
+
+
 		j=4;
 		split(g[3+j],ss,":");
-		onedsk = onedsk" "ss[i];
+		onedsk = onedsk"  "ss[i];
 		util+=ss[i];
 		#print util;
-		
-		showbuf[curr++ % (wlns+2), col] = onedsk"\t|";			
+
+		showbuf[curr++ % (wlns+2), col] = onedsk"\t|";
 	}
 
-	
+
 ##################check the mix part
-	
+
 	if(to_mix){#add cpu header in middle
-		showbuf[curr++ % (wlns+2), col]="\t\t\t\t\t|"
-		showbuf[curr++ % (wlns+2), col]="#CPU:  usr sys idl wai hiq siq stl\t|"	
-		showbuf[curr++ % (wlns+2), col]="--------------------------------------\t|"
+		showbuf[curr++ % (wlns+2), col]="\t\t\t\t\t\t|"
+		showbuf[curr++ % (wlns+2), col]="#CPU:  usr sys idl wai hiq siq stl           \t|"
+		showbuf[curr++ % (wlns+2), col]="---------------------------------------------\t|"
 	}else{#if not to mix then padding to whole window,as upper()
 		curr = int((curr+wlns+2-1)/(wlns+2))*(wlns+2);
 	}
 
 
 ##################for CPU show
-	
+
 	for( i=1; i<=lcpu+1; i++ ){
 		col = int(curr/(wlns+2));
 		if( curr % (wlns+2) == 0){#arry subindex all starts from zero
-			showbuf[curr++ % (wlns+2), col]="#CPU:  usr sys idl wai hiq siq stl\t|"
-			showbuf[curr++ % (wlns+2), col]="--------------------------------------\t|"
+			showbuf[curr++ % (wlns+2), col]="#CPU:  usr sys idl wai hiq siq stl         \t|"
+			showbuf[curr++ % (wlns+2), col]="-------------------------------------------\t|"
 		}
-		
+
 		if (i == lcpu+1){
 			#CPU avg
 			cpuavg = "AVG: "
 			for(tt=1;tt<=length(c);tt++){cpuavg=cpuavg""sprintf("%3d ",cc[tt]/length(t));cc[tt]=0;}
-			showbuf[curr++ % (wlns+2), col] = cpuavg" \t|";
+			showbuf[curr++ % (wlns+2), col] = cpuavg" \t\t|";
 			continue;
 		}
-		
-		showbuf[curr++ % (wlns+2), col] = sprintf("%02d:  %s", i-1,t[i])"\t|";
+
+		showbuf[curr++ % (wlns+2), col] = sprintf("%02d:  %s", i-1,t[i])"\t\t|";
 		split(t[i],c);
-		for(tt=1;tt<=length(c);tt++)cc[tt]+=c[tt];					
+		for(tt=1;tt<=length(c);tt++)cc[tt]+=c[tt];
 	}
-	
+
 	##################showout
 
 
-	
+
 	for(i=0;i<wlns+2;i++){
 		for(j=0;j<=col;j++)
 			if((i,j) in showbuf){
@@ -250,23 +252,16 @@ awk -v dsks=$dsks -v stty_lns_set=$stty_lns_set '{
 				printf showbuf[i,j];
 			}else{#This can only happen in the overlap region but wihout mix filled, so the width is same of the one disk, or the tail. and the blank no need to fill,or same as the CPU
 				if(j==col)# The cpu width	- now the cpu and dsk take the same width for simple
-					printf "\t\t\t\t\t|";
+					printf "\t\t\t\t\t\t|";
 				else # the dsk width
-					printf "\t\t\t\t\t|";
-			}		
+					printf "\t\t\t\t\t\t|";
+			}
 		print ""
 	}
 
 for(i=0;i<=col;i++)
-	printf "****************************************";
+	printf "************************************************";
 
-		
+
 }'
 echo
-
-
-
-
-
-
-
