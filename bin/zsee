@@ -57,7 +57,7 @@ if [ -z ${stty_lines} ];then
 fi
 
 "$DIR"/dstat -tmnd --disk-tps --disk-avgrq --disk-util -D $dsks -c -N $nets -C $cpu --nocolor --noheaders $int |
-awk -v dsks=$dsks -v stty_lns_set=$stty_lns_set '{
+"$DIR"/awk -v dsks=$dsks -v stty_lns_set=$stty_lns_set '{
 
 	#Dynamically get the windows size at each loop
 	if (stty_lns_set == 0){ #preset in shell begion or not
