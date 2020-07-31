@@ -45,7 +45,7 @@ if [ -z $nets ];then
 	nets=`cat /proc/net/if_inet6 | awk '{if(NR>1)printf ",";printf $NF}'`
 fi
 if [ -z $dsks ];then
-	dsks=`ls /sys/block/ | egrep "vd|sd" | awk '{if(NR>1)printf ",";printf $1}'`
+	dsks=`ls /sys/block/ | egrep "vd|sd|nvm" | awk '{if(NR>1)printf ",";printf $1}'`
 fi
 if [ -z $int ];then
 	int=2
@@ -54,7 +54,7 @@ if [ -z ${stty_lines} ];then
 	stty_lines=0;	
 fi
 
-dstat -tmnd --disk-tps --disk-avgrq --disk-util -D $dsks -c -N $nets -C $cpu --nocolor --noheaders $int | 
+~/usr/bin/dstat -tmnd --disk-tps --disk-util --disk-avgrq -D $dsks -c -N $nets -C $cpu --nocolor --noheaders $int | 
 awk -v dsks=$dsks -v stty_lns_set=$stty_lns_set '{
 
 	#Dynamically get the windows size at each loop
@@ -145,17 +145,17 @@ awk -v dsks=$dsks -v stty_lns_set=$stty_lns_set '{
 	for( i=1; i<=ldsk+1; i++ ){
 		col = int(curr/(wlns+2));
 		if( curr % (wlns+2) == 0){#arry subindex all starts from zero
-			showbuf[curr++ % (wlns+2), col]="#DSK:  r     w    r/s   w/s  rqsz util\t|"
-			showbuf[curr++ % (wlns+2), col]="--------------------------------------\t|"
+			showbuf[curr++ % (wlns+2), col]="#DSK:      r     w    r/s    w/s  rqsz  util \t|"
+			showbuf[curr++ % (wlns+2), col]="---------------------------------------------\t|"
 		}
 		
 		if (i == ldsk+1){
 			#dsk summary
 			dsksum = sprintf("%"ldname"s:","ALL")
 			for(tt=1;tt<=2;tt++)dsksum = dsksum""sprintf("%4dM ",bdd[tt]/1024/1024);
-			for(tt=1;tt<=2;tt++)dsksum = dsksum""sprintf("%4d ",ops[tt]/length(h));
-			dsksum = dsksum""sprintf("%5d ",rqsz/length(h));
-			dsksum = dsksum""sprintf("%4d ",util/length(h));
+			for(tt=1;tt<=2;tt++)dsksum = dsksum""sprintf("%4d  ",ops[tt]/length(h));
+			dsksum = dsksum""sprintf("%5d  ",rqsz/length(h));
+			dsksum = dsksum""sprintf("%4d  ",util/length(h));
 			
 			showbuf[curr++ % (wlns+2), col]=dsksum"\t|";
 			
@@ -189,14 +189,14 @@ awk -v dsks=$dsks -v stty_lns_set=$stty_lns_set '{
 		
 		j=3;
 		split(g[3+j],ss,":");
-		onedsk = onedsk" "ss[i];
+		onedsk = onedsk"  "ss[i];
 		rqsz+=ss[i];
 		#print rqsz;
 		
 		
 		j=4;
 		split(g[3+j],ss,":");
-		onedsk = onedsk" "ss[i];
+		onedsk = onedsk"  "ss[i];
 		util+=ss[i];
 		#print util;
 		
@@ -207,9 +207,9 @@ awk -v dsks=$dsks -v stty_lns_set=$stty_lns_set '{
 ##################check the mix part
 	
 	if(to_mix){#add cpu header in middle
-		showbuf[curr++ % (wlns+2), col]="\t\t\t\t\t|"
-		showbuf[curr++ % (wlns+2), col]="#CPU:  usr sys idl wai hiq siq stl\t|"	
-		showbuf[curr++ % (wlns+2), col]="--------------------------------------\t|"
+		showbuf[curr++ % (wlns+2), col]="\t\t\t\t\t\t|"
+		showbuf[curr++ % (wlns+2), col]="#CPU:  usr sys idl wai hiq siq stl           \t|"	
+		showbuf[curr++ % (wlns+2), col]="---------------------------------------------\t|"
 	}else{#if not to mix then padding to whole window,as upper()
 		curr = int((curr+wlns+2-1)/(wlns+2))*(wlns+2);
 	}
@@ -220,19 +220,19 @@ awk -v dsks=$dsks -v stty_lns_set=$stty_lns_set '{
 	for( i=1; i<=lcpu+1; i++ ){
 		col = int(curr/(wlns+2));
 		if( curr % (wlns+2) == 0){#arry subindex all starts from zero
-			showbuf[curr++ % (wlns+2), col]="#CPU:  usr sys idl wai hiq siq stl\t|"
-			showbuf[curr++ % (wlns+2), col]="--------------------------------------\t|"
+			showbuf[curr++ % (wlns+2), col]="#CPU:  usr sys idl wai hiq siq stl         \t|"
+			showbuf[curr++ % (wlns+2), col]="-------------------------------------------\t|"
 		}
 		
 		if (i == lcpu+1){
 			#CPU avg
 			cpuavg = "AVG: "
 			for(tt=1;tt<=length(c);tt++){cpuavg=cpuavg""sprintf("%3d ",cc[tt]/length(t));cc[tt]=0;}
-			showbuf[curr++ % (wlns+2), col] = cpuavg" \t|";
+			showbuf[curr++ % (wlns+2), col] = cpuavg" \t\t|";
 			continue;
 		}
 		
-		showbuf[curr++ % (wlns+2), col] = sprintf("%02d:  %s", i-1,t[i])"\t|";
+		showbuf[curr++ % (wlns+2), col] = sprintf("%02d:  %s", i-1,t[i])"\t\t|";
 		split(t[i],c);
 		for(tt=1;tt<=length(c);tt++)cc[tt]+=c[tt];					
 	}
@@ -248,15 +248,15 @@ awk -v dsks=$dsks -v stty_lns_set=$stty_lns_set '{
 				printf showbuf[i,j];
 			}else{#This can only happen in the overlap region but wihout mix filled, so the width is same of the one disk, or the tail. and the blank no need to fill,or same as the CPU
 				if(j==col)# The cpu width	- now the cpu and dsk take the same width for simple
-					printf "\t\t\t\t\t|";
+					printf "\t\t\t\t\t\t|";
 				else # the dsk width
-					printf "\t\t\t\t\t|";
+					printf "\t\t\t\t\t\t|";
 			}		
 		print ""
 	}
 
 for(i=0;i<=col;i++)
-	printf "****************************************";
+	printf "************************************************";
 
 		
 }'
