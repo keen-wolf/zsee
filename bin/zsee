@@ -22,7 +22,7 @@ for i in $@ ;do
 		if [ $i = "cpua" ] ;then
 			cpu="total"
 		else
-			if [ ${i:0:2} = "sd" ] || [ ${i:0:2} = "vd" ] ;then
+			if [ ${i:0:2} = "sd" ] || [ ${i:0:2} = "vd" ] || [ ${i:0:3} = "nvm" ]  ;then
 				dsks=$i
 			else
 				if [[ $i =~ ^[0-9]+$ ]] ;then
@@ -45,7 +45,7 @@ if [ -z $nets ];then
 	nets=`cat /proc/net/if_inet6 | awk '{if(NR>1)printf ",";printf $NF}'`
 fi
 if [ -z $dsks ];then
-	dsks=`ls /sys/block/ | egrep "vd|sd" | awk '{if(NR>1)printf ",";printf $1}'`
+	dsks=`ls /sys/block/ | egrep "vd|sd|nvm" | awk '{if(NR>1)printf ",";printf $1}'`
 fi
 if [ -z $int ];then
 	int=2
@@ -130,7 +130,9 @@ awk -v dsks=$dsks -v stty_lns_set=$stty_lns_set '{
 		if(ldname<length(h[i]))
 			ldname=length(h[i]);
 	for(i=1;i<=length(h);i++){
-		h[i]=sprintf("%"ldname"s",h[i])
+		if(length(h[i])>5)
+			h[i]=substr(h[i],1,2)"."substr(h[i],length(h[i])-2);
+		h[i]=sprintf("%"ldname"s",h[i]);
 	}
 
 
