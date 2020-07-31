@@ -72,6 +72,7 @@
 	for(i=1;i<=length(h);i++)
 		if(ldname<length(h[i]))
 			ldname=length(h[i]);
+	ldname = ldname < 4 ? 4 : ldname;
 	for(i=1;i<=length(h);i++){
 		if(length(h[i])>5)
 			h[i]=substr(h[i],1,2)"."substr(h[i],length(h[i])-1);
